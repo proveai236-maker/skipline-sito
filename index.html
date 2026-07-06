@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SkipLine — Biglietti parchi e attività, consegna immediata</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Manrope:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --ink:#0B2E33;
+    --teal:#0F8B8D;
+    --teal-dark:#0A6668;
+    --coral:#FF6B4A;
+    --yellow:#FFD166;
+    --bg:#F5FBFA;
+    --paper:#FFFFFF;
+    --line:#D8EAE9;
+    --muted:#5C7A7B;
+    --radius:18px;
+    --shadow: 0 8px 24px rgba(11,46,51,0.08);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Manrope',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.display{
+    font-family:'Bungee',cursive;
+    font-weight:400;
+    line-height:1.05;
+    letter-spacing:0.5px;
+  }
+  .mono{font-family:'Space Mono',monospace;}
+  a{color:inherit;}
+  img{max-width:100%;display:block;}
+  button{font-family:inherit;cursor:pointer;}
+  .container{max-width:1180px;margin:0 auto;padding:0 24px;}
+  .hidden{display:none !important;}
+
+  /* ---------- NAV ---------- */
+  header.site{
+    position:sticky;top:0;z-index:100;
+    background:rgba(245,251,250,0.92);
+    backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line);
+  }
+  .nav-row{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 24px;max-width:1180px;margin:0 auto;
+  }
+  .logo{
+    display:flex;align-items:center;gap:8px;
+    font-family:'Bungee',cursive;font-size:22px;color:var(--teal-dark);
+    cursor:pointer;
+  }
+  .logo .dot{color:var(--coral);}
+  nav.links{display:flex;gap:28px;align-items:center;}
+  nav.links a{
+    font-weight:700;font-size:14.5px;text-decoration:none;color:var(--ink);
+    padding:8px 2px;border-bottom:2px solid transparent;transition:.15s;
+  }
+  nav.links a:hover{border-bottom-color:var(--coral);}
+  .nav-actions{display:flex;align-items:center;gap:14px;}
+  .icon-btn{
+    position:relative;background:none;border:none;padding:8px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .cart-count{
+    position:absolute;top:2px;right:2px;background:var(--coral);color:#fff;
+    font-size:10.5px;font-weight:800;border-radius:50%;
+    width:16px;height:16px;display:flex;align-items:center;justify-content:center;
+  }
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    padding:13px 24px;border-radius:100px;border:none;
+    font-weight:800;font-size:14.5px;text-decoration:none;
+    transition:transform .12s ease, box-shadow .12s ease;
+  }
+  .btn:active{transform:scale(0.97);}
+  .btn-primary{background:var(--coral);color:#fff;box-shadow:0 6px 18px rgba(255,107,74,0.35);}
+  .btn-primary:hover{box-shadow:0 8px 22px rgba(255,107,74,0.45);}
+  .btn-dark{background:var(--ink);color:#fff;}
+  .btn-outline{background:transparent;border:2px solid var(--ink);color:var(--ink);}
+  .btn-ghost{background:var(--teal);color:#fff;}
+  .btn-sm{padding:9px 16px;font-size:13px;}
+  .btn-full{width:100%;}
+  .mobile-menu-btn{display:none;background:none;border:none;}
+
+  /* ---------- HERO ---------- */
+  .hero{
+    padding:64px 24px 40px;
+    max-width:1180px;margin:0 auto;
+    display:grid;grid-template-columns:1.1fr 0.9fr;gap:48px;align-items:center;
+  }
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:8px;
+    background:#fff;border:1px solid var(--line);border-radius:100px;
+    padding:7px 14px;font-size:12.5px;font-weight:700;color:var(--teal-dark);
+    margin-bottom:20px;
+  }
+  .eyebrow .pulse{width:7px;height:7px;border-radius:50%;background:var(--coral);
+    animation:pulse 1.6s infinite;}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,107,74,.5);}70%{box-shadow:0 0 0 8px rgba(255,107,74,0);}100%{box-shadow:0 0 0 0 rgba(255,107,74,0);}}
+  .hero h1{font-size:44px;margin:0 0 18px;color:var(--ink);}
+  .hero h1 span{color:var(--teal);}
+  .hero p.lead{font-size:17px;color:var(--muted);max-width:480px;margin:0 0 28px;line-height:1.55;}
+  .hero-ctas{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:28px;}
+  .trust-row{display:flex;gap:22px;flex-wrap:wrap;}
+  .trust-item{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--ink);}
+  .trust-item svg{flex-shrink:0;}
+
+  /* hero ticket visual */
+  .ticket-hero-wrap{position:relative;display:flex;justify-content:center;}
+  .ticket-hero{
+    background:#fff;border-radius:20px;box-shadow:var(--shadow);
+    width:100%;max-width:380px;transform:rotate(4deg);
+    position:relative;overflow:hidden;border:1px solid var(--line);
+  }
+  .ticket-hero .top{
+    background:var(--teal);color:#fff;padding:20px 22px 26px;position:relative;
+  }
+  .ticket-hero .top .park{font-family:'Bungee';font-size:19px;}
+  .ticket-hero .top .place{font-size:12.5px;opacity:.9;margin-top:4px;font-weight:600;}
+  .perforation{
+    position:relative;height:0;
+  }
+  .perforation::before{
+    content:"";position:absolute;left:-11px;top:-11px;width:22px;height:22px;
+    background:var(--bg);border-radius:50%;
+  }
+  .perforation::after{
+    content:"";position:absolute;right:-11px;top:-11px;width:22px;height:22px;
+    background:var(--bg);border-radius:50%;
+  }
+  .dashline{border-top:2px dashed var(--line);margin:0 22px;}
+  .ticket-hero .bottom{padding:20px 22px 24px;display:flex;justify-content:space-between;align-items:flex-end;}
+  .ticket-hero .field-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:800;}
+  .ticket-hero .field-value{font-size:14px;font-weight:800;margin-top:3px;}
+  .qr-fake{
+    width:56px;height:56px;border-radius:8px;
+    background-image:
+      linear-gradient(90deg, var(--ink) 22%, transparent 22%, transparent 28%, var(--ink) 28%, var(--ink) 44%, transparent 44%, transparent 56%, var(--ink) 56%, var(--ink) 72%, transparent 72%, transparent 78%, var(--ink) 78%),
+      linear-gradient(0deg, var(--ink) 22%, transparent 22%, transparent 28%, var(--ink) 28%, var(--ink) 44%, transparent 44%, transparent 56%, var(--ink) 56%, var(--ink) 72%, transparent 72%, transparent 78%, var(--ink) 78%);
+    background-size:100% 8px, 8px 100%;
+    background-color:#fff;border:1px solid var(--line);
+  }
+  .badge-float{
+    position:absolute;background:var(--yellow);color:var(--ink);
+    font-weight:800;font-size:12px;padding:8px 14px;border-radius:100px;
+    box-shadow:var(--shadow);
+  }
+  .badge-1{top:-6px;right:36px;transform:rotate(-8deg);}
+  .badge-2{bottom:10px;left:-10px;transform:rotate(-6deg);}
+
+  /* ---------- SECTION SHARED ---------- */
+  section{padding:64px 0;}
+  .section-head{max-width:640px;margin:0 auto 36px;text-align:left;}
+  .section-tag{
+    font-size:12.5px;font-weight:800;color:var(--coral);text-transform:uppercase;
+    letter-spacing:1.5px;margin-bottom:10px;
+  }
+  .section-head h2{font-size:32px;margin:0 0 10px;}
+  .section-head p{color:var(--muted);font-size:15.5px;margin:0;}
+
+  /* city chips */
+  .chip-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:28px;}
+  .chip{
+    padding:10px 18px;border-radius:100px;border:2px solid var(--line);
+    background:#fff;font-weight:700;font-size:13.5px;color:var(--ink);
+    transition:.15s;
+  }
+  .chip.active,.chip:hover{border-color:var(--teal);background:var(--teal);color:#fff;}
+
+  .cat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:44px;}
+  .cat-card{
+    background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+    padding:22px 18px;text-align:center;transition:.15s;
+  }
+  .cat-card:hover{transform:translateY(-3px);box-shadow:var(--shadow);border-color:var(--teal);}
+  .cat-card .emoji{font-size:30px;margin-bottom:10px;}
+  .cat-card .name{font-weight:800;font-size:14.5px;}
+  .cat-card .count{font-size:12px;color:var(--muted);margin-top:2px;}
+
+  /* product grid / ticket cards */
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;}
+  .ticket-card{
+    background:#fff;border-radius:var(--radius);border:1px solid var(--line);
+    overflow:hidden;cursor:pointer;transition:.18s;position:relative;
+  }
+  .ticket-card:hover{transform:translateY(-4px);box-shadow:var(--shadow);}
+  .ticket-card .photo{
+    height:170px;background-size:cover;background-position:center;position:relative;
+  }
+  .ticket-card .cat-tag{
+    position:absolute;top:12px;left:12px;background:rgba(255,255,255,.92);
+    padding:5px 12px;border-radius:100px;font-size:11.5px;font-weight:800;color:var(--teal-dark);
+  }
+  .ticket-card .fav{
+    position:absolute;top:12px;right:12px;background:rgba(255,255,255,.92);
+    width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  }
+  .ticket-card .body{padding:18px 18px 16px;}
+  .ticket-card .city{font-size:11.5px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;}
+  .ticket-card h3{font-family:'Manrope';font-weight:800;font-size:16.5px;margin:6px 0 8px;line-height:1.3;}
+  .ticket-card .meta{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);margin-bottom:14px;}
+  .ticket-card .stars{color:var(--yellow);}
+  .card-perf{position:relative;margin:0 -1px;}
+  .card-perf::before,.card-perf::after{
+    content:"";position:absolute;top:-9px;width:18px;height:18px;background:var(--bg);border-radius:50%;
+  }
+  .card-perf::before{left:-9px;}
+  .card-perf::after{right:-9px;}
+  .card-dash{border-top:2px dashed var(--line);}
+  .ticket-card .price-row{
+    display:flex;justify-content:space-between;align-items:center;padding:14px 18px;
+  }
+  .price-tag .from{font-size:11px;color:var(--muted);font-weight:700;}
+  .price-tag .amt{font-family:'Bungee';font-size:20px;color:var(--ink);}
+  .price-tag .amt small{font-family:'Manrope';font-size:12px;color:var(--muted);}
+
+  /* ---------- HOW IT WORKS ---------- */
+  .steps{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;}
+  .step{text-align:left;}
+  .step .num{
+    font-family:'Bungee';font-size:26px;color:var(--teal);margin-bottom:8px;display:block;
+  }
+  .step h4{font-size:15.5px;margin:0 0 6px;font-weight:800;font-family:'Manrope';}
+  .step p{font-size:13.5px;color:var(--muted);margin:0;line-height:1.5;}
+
+  /* ---------- TRUST / REVIEWS ---------- */
+  .trust-section{background:var(--ink);color:#fff;border-radius:28px;margin:0 24px;padding:56px 40px;}
+  .trust-section .container{max-width:1180px;padding:0;}
+  .trust-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start;}
+  .trust-section .section-tag{color:var(--yellow);}
+  .trust-section h2{color:#fff;}
+  .trust-section p{color:#B7CFCF;}
+  .stat-row{display:flex;gap:36px;margin-top:28px;}
+  .stat b{font-family:'Bungee';font-size:26px;display:block;color:var(--yellow);}
+  .stat span{font-size:12.5px;color:#B7CFCF;font-weight:700;}
+  .review-card{
+    background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);
+    border-radius:16px;padding:20px;margin-bottom:14px;
+  }
+  .review-card .stars{color:var(--yellow);font-size:13px;margin-bottom:8px;}
+  .review-card p{color:#fff;font-size:13.5px;margin:0 0 10px;line-height:1.5;}
+  .review-card .who{font-size:12px;color:#9FC0C0;font-weight:700;}
+
+  /* ---------- FAQ ---------- */
+  .faq-item{border-bottom:1px solid var(--line);}
+  .faq-q{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:20px 4px;font-weight:800;font-size:15.5px;
+  }
+  .faq-a{max-height:0;overflow:hidden;transition:max-height .25s ease;font-size:14.5px;color:var(--muted);line-height:1.6;}
+  .faq-a-inner{padding:0 4px 20px;}
+  .faq-item.open .faq-a{max-height:200px;}
+  .faq-item .chev{transition:.2s;color:var(--teal);}
+  .faq-item.open .chev{transform:rotate(180deg);}
+
+  /* ---------- FOOTER ---------- */
+  footer{background:#fff;border-top:1px solid var(--line);padding:48px 0 24px;margin-top:40px;}
+  .foot-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:32px;margin-bottom:32px;}
+  .foot-col h5{font-size:13px;text-transform:uppercase;letter-spacing:0.8px;margin:0 0 14px;color:var(--muted);}
+  .foot-col a{display:block;font-size:14px;margin-bottom:10px;text-decoration:none;color:var(--ink);font-weight:600;}
+  .foot-bottom{border-top:1px solid var(--line);padding-top:20px;display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted);}
+
+  /* sticky mobile CTA */
+  .sticky-cta{
+    display:none;position:fixed;bottom:0;left:0;right:0;background:#fff;
+    border-top:1px solid var(--line);padding:12px 16px;z-index:200;
+    box-shadow:0 -6px 18px rgba(0,0,0,0.06);
+  }
+
+  /* ---------- PRODUCT PAGE ---------- */
+  .breadcrumb{font-size:13px;color:var(--muted);margin:20px 0;font-weight:600;}
+  .breadcrumb a{text-decoration:none;color:var(--teal-dark);}
+  .product-layout{display:grid;grid-template-columns:1.2fr 0.9fr;gap:44px;align-items:start;}
+  .product-gallery .main-photo{height:360px;background-size:cover;background-position:center;border-radius:var(--radius);margin-bottom:12px;}
+  .thumb-row{display:flex;gap:10px;}
+  .thumb{width:72px;height:56px;border-radius:10px;background-size:cover;background-position:center;border:2px solid transparent;cursor:pointer;}
+  .thumb.active{border-color:var(--teal);}
+  .product-info h1{font-size:28px;margin:14px 0 8px;}
+  .product-info .loc{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:13.5px;font-weight:700;margin-bottom:14px;}
+  .product-info .desc{font-size:14.5px;color:var(--ink);line-height:1.7;margin-bottom:20px;}
+  .includes-list{list-style:none;padding:0;margin:0 0 20px;}
+  .includes-list li{display:flex;gap:10px;align-items:flex-start;font-size:14px;margin-bottom:10px;color:var(--ink);}
+  .includes-list svg{flex-shrink:0;margin-top:2px;color:var(--teal);}
+
+  .buy-box{
+    background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+    padding:24px;position:sticky;top:90px;box-shadow:var(--shadow);
+  }
+  .buy-box .price-big{font-family:'Bungee';font-size:30px;margin-bottom:2px;}
+  .buy-box .price-note{font-size:12.5px;color:var(--muted);margin-bottom:18px;}
+  .field-group{margin-bottom:16px;}
+  .field-group label{display:block;font-size:12.5px;font-weight:800;margin-bottom:7px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);}
+  .field-group input,.field-group select{
+    width:100%;padding:12px 14px;border-radius:10px;border:1.5px solid var(--line);
+    font-family:'Manrope';font-size:14.5px;font-weight:600;color:var(--ink);background:#FAFEFE;
+  }
+  .qty-control{display:flex;align-items:center;border:1.5px solid var(--line);border-radius:10px;overflow:hidden;width:fit-content;}
+  .qty-control button{width:38px;height:38px;background:#FAFEFE;border:none;font-size:16px;font-weight:800;color:var(--teal-dark);}
+  .qty-control span{width:40px;text-align:center;font-weight:800;}
+  .buy-box .subtotal-row{display:flex;justify-content:space-between;padding:14px 0;border-top:1px dashed var(--line);margin-top:6px;font-weight:800;}
+  .avail-note{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--teal-dark);font-weight:700;margin-top:12px;}
+
+  .info-tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);margin:36px 0 20px;}
+  .info-tab{padding:12px 4px;margin-right:22px;font-weight:800;font-size:14px;color:var(--muted);border-bottom:2px solid transparent;cursor:pointer;}
+  .info-tab.active{color:var(--ink);border-color:var(--coral);}
+
+  /* ---------- CART / CHECKOUT ---------- */
+  .checkout-layout{display:grid;grid-template-columns:1.3fr 0.9fr;gap:44px;align-items:start;}
+  .cart-line{display:flex;gap:14px;padding:16px 0;border-bottom:1px solid var(--line);}
+  .cart-line img{width:76px;height:60px;border-radius:8px;object-fit:cover;}
+  .cart-line .info{flex:1;}
+  .cart-line h4{margin:0 0 4px;font-size:14.5px;font-weight:800;}
+  .cart-line .sub{font-size:12.5px;color:var(--muted);}
+  .cart-line .price{font-weight:800;font-family:'Space Mono';}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .form-grid .full{grid-column:1/-1;}
+  .stripe-box{
+    border:1.5px solid var(--line);border-radius:12px;padding:14px;background:#FAFEFE;
+    display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);font-weight:600;
+  }
+  .summary-box{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:24px;position:sticky;top:90px;}
+  .summary-row{display:flex;justify-content:space-between;font-size:14px;padding:8px 0;color:var(--muted);}
+  .summary-row.total{border-top:1px dashed var(--line);margin-top:8px;padding-top:14px;font-weight:800;color:var(--ink);font-size:16px;}
+  .secure-note{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);margin-top:14px;font-weight:600;}
+
+  /* ---------- CONFIRMATION ---------- */
+  .confirm-wrap{max-width:520px;margin:0 auto;text-align:center;}
+  .check-circle{
+    width:76px;height:76px;border-radius:50%;background:var(--teal);
+    display:flex;align-items:center;justify-content:center;margin:0 auto 22px;
+  }
+  .confirm-ticket{
+    background:#fff;border-radius:20px;box-shadow:var(--shadow);border:1px solid var(--line);
+    text-align:left;margin-top:32px;overflow:hidden;
+  }
+  .confirm-ticket .top{background:var(--teal);color:#fff;padding:22px 24px;}
+  .confirm-ticket .top .park{font-family:'Bungee';font-size:20px;}
+  .confirm-ticket .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:22px 24px;}
+  .confirm-ticket .field-label{font-size:10.5px;text-transform:uppercase;color:var(--muted);font-weight:800;letter-spacing:.5px;}
+  .confirm-ticket .field-value{font-size:14.5px;font-weight:800;margin-top:4px;}
+  .confirm-ticket .qr-wrap{display:flex;justify-content:center;padding:0 24px 24px;}
+  .confirm-ticket .code{text-align:center;padding-bottom:22px;font-size:13px;color:var(--muted);}
+
+  /* ---------- ACCOUNT ---------- */
+  .account-tabs{display:flex;gap:10px;margin-bottom:28px;}
+  .acc-ticket{display:flex;align-items:center;gap:18px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px 20px;margin-bottom:14px;}
+  .acc-ticket img{width:64px;height:64px;border-radius:10px;object-fit:cover;}
+  .acc-ticket .info{flex:1;}
+  .acc-ticket h4{margin:0 0 4px;font-size:15px;font-weight:800;}
+  .acc-ticket .sub{font-size:12.5px;color:var(--muted);}
+  .status-pill{padding:5px 12px;border-radius:100px;font-size:11.5px;font-weight:800;}
+  .status-pill.valid{background:#E4F5F0;color:var(--teal-dark);}
+  .status-pill.used{background:#F0F0F0;color:var(--muted);}
+
+  /* ---------- FAQ / CHI SIAMO page hero ---------- */
+  .page-hero{padding:48px 0 20px;text-align:center;}
+  .page-hero h1{font-size:34px;}
+  .page-hero p{color:var(--muted);max-width:520px;margin:10px auto 0;}
+
+  .two-col-list{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:20px;}
+
+  @media(max-width:960px){
+    .hero{grid-template-columns:1fr;padding-top:32px;gap:32px;}
+    .hero h1{font-size:32px;}
+    .cat-grid{grid-template-columns:repeat(2,1fr);}
+    .grid{grid-template-columns:repeat(2,1fr);}
+    .steps{grid-template-columns:repeat(2,1fr);}
+    .trust-grid{grid-template-columns:1fr;}
+    .trust-section{margin:0 12px;padding:36px 22px;}
+    .product-layout,.checkout-layout{grid-template-columns:1fr;}
+    .buy-box,.summary-box{position:static;}
+    .foot-grid{grid-template-columns:1fr 1fr;}
+    nav.links{display:none;}
+    .mobile-menu-btn{display:block;}
+    .sticky-cta{display:block;}
+    .two-col-list{grid-template-columns:1fr;}
+  }
+  @media(max-width:600px){
+    .grid{grid-template-columns:1fr;}
+    .cat-grid{grid-template-columns:1fr 1fr;}
+    .form-grid{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ HEADER ============ -->
+<header class="site">
+  <div class="nav-row">
+    <div class="logo" onclick="go('home')">Skip<span class="dot">•</span>Line</div>
+    <nav class="links">
+      <a href="#" onclick="go('catalog');return false;">Catalogo</a>
+      <a href="#" onclick="go('faq');return false;">FAQ</a>
+      <a href="#" onclick="go('about');return false;">Chi siamo</a>
+    </nav>
+    <div class="nav-actions">
+      <button class="icon-btn" onclick="go('account')" title="I miei biglietti">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </button>
+      <button class="icon-btn" onclick="go('cart')" title="Carrello">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+        <span class="cart-count" id="cartCount">0</span>
+      </button>
+      <button class="btn btn-primary btn-sm" onclick="go('catalog')">Compra ora</button>
+    </div>
+  </div>
+</header>
+
+<!-- ============ HOME / HERO + CATALOG ============ -->
+<main id="view-home">
+
+  <section class="hero" style="padding-bottom:0;">
+    <div>
+      <div class="eyebrow"><span class="pulse"></span> Consegna via email in pochi minuti</div>
+      <h1>Biglietti parchi e attività,<br><span>prezzo migliore</span>,<br>consegna immediata.</h1>
+      <p class="lead">Gardaland, Siam Park, jet ski e tante altre esperienze in tutta Italia e Spagna. Compri online, ricevi subito il biglietto con QR code, entri senza fare la fila alla cassa.</p>
+      <div class="hero-ctas">
+        <button class="btn btn-primary" onclick="go('catalog')">Sfoglia il catalogo</button>
+        <button class="btn btn-outline" onclick="go('faq')">Come funziona</button>
+      </div>
+      <div class="trust-row">
+        <div class="trust-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0F8B8D" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg> Pagamento sicuro Stripe</div>
+        <div class="trust-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0F8B8D" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg> QR code istantaneo</div>
+        <div class="trust-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0F8B8D" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg> Nessun costo nascosto</div>
+      </div>
+    </div>
+    <div class="ticket-hero-wrap">
+      <div class="badge-float badge-1">Miglior prezzo ✓</div>
+      <div class="ticket-hero">
+        <div class="top">
+          <div class="park">GARDALAND</div>
+          <div class="place">Castelnuovo del Garda (VR)</div>
+        </div>
+        <div class="perforation"></div>
+        <div class="dashline"></div>
+        <div class="bottom">
+          <div>
+            <div class="field-label">Data</div>
+            <div class="field-value">14 Ago 2026</div>
+          </div>
+          <div>
+            <div class="field-label">Ingressi</div>
+            <div class="field-value">2 Adulti</div>
+          </div>
+          <div class="qr-fake"></div>
+        </div>
+      </div>
+      <div class="badge-float badge-2">👆 Consegna in email</div>
+    </div>
+  </section>
+
+  <!-- CATALOG BY CITY / CATEGORY -->
+  <section id="catalogo">
+    <div class="container">
+      <div class="section-head">
+        <div class="section-tag">Catalogo</div>
+        <h2>Scegli per città</h2>
+        <p>Filtra per destinazione per vedere subito cosa è disponibile vicino a te o dove stai andando in vacanza.</p>
+      </div>
+      <div class="chip-row" id="cityChips">
+        <button class="chip active" data-city="tutte">Tutte le città</button>
+        <button class="chip" data-city="Lago di Garda">Lago di Garda</button>
+        <button class="chip" data-city="Tenerife">Tenerife</button>
+        <button class="chip" data-city="Costa Brava">Costa Brava</button>
+        <button class="chip" data-city="Barcellona">Barcellona</button>
+        <button class="chip" data-city="Rimini">Rimini</button>
+      </div>
+
+      <div class="section-head" style="margin-top:8px;">
+        <div class="section-tag">Categorie</div>
+        <h2>...o per tipo di esperienza</h2>
+      </div>
+      <div class="cat-grid" id="catGrid">
+        <div class="cat-card" data-cat="tutte"><div class="emoji">🎟️</div><div class="name">Tutte</div><div class="count">18 esperienze</div></div>
+        <div class="cat-card" data-cat="Parchi a tema"><div class="emoji">🎢</div><div class="name">Parchi a tema</div><div class="count">6 esperienze</div></div>
+        <div class="cat-card" data-cat="Acquapark"><div class="emoji">🌊</div><div class="name">Acquapark</div><div class="count">5 esperienze</div></div>
+        <div class="cat-card" data-cat="Sport acquatici"><div class="emoji">🚤</div><div class="name">Sport acquatici</div><div class="count">4 esperienze</div></div>
+        <div class="cat-card" data-cat="Altro"><div class="emoji">✨</div><div class="name">Altro</div><div class="count">3 esperienze</div></div>
+      </div>
+
+      <div class="grid" id="productGrid"></div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section>
+    <div class="container">
+      <div class="section-head">
+        <div class="section-tag">Come funziona</div>
+        <h2>Dal telefono al parco in 4 passaggi</h2>
+      </div>
+      <div class="steps">
+        <div class="step"><span class="num">01</span><h4>Scegli l'esperienza</h4><p>Cerca per città o categoria e apri la scheda con tutti i dettagli.</p></div>
+        <div class="step"><span class="num">02</span><h4>Seleziona data e persone</h4><p>Indichi il giorno in cui vuoi andare e quanti biglietti ti servono.</p></div>
+        <div class="step"><span class="num">03</span><h4>Paghi in sicurezza</h4><p>Checkout veloce con carta, gestito da Stripe.</p></div>
+        <div class="step"><span class="num">04</span><h4>Ricevi il biglietto</h4><p>Email immediata con QR code: lo mostri all'ingresso, senza stampare nulla.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TRUST -->
+  <section>
+    <div class="trust-section">
+      <div class="container">
+        <div class="trust-grid">
+          <div>
+            <div class="section-tag">Perché fidarsi</div>
+            <h2>Non siamo un marketplace anonimo.</h2>
+            <p>Vendiamo direttamente attraverso il nostro canale, con prezzi verificati e assistenza reale se qualcosa cambia — data, meteo, imprevisti.</p>
+            <div class="stat-row">
+              <div class="stat"><b>4.9/5</b><span>Valutazione media</span></div>
+              <div class="stat"><b>12.400+</b><span>Biglietti consegnati</span></div>
+              <div class="stat"><b>&lt; 5 min</b><span>Tempo medio di consegna</span></div>
+            </div>
+          </div>
+          <div>
+            <div class="review-card">
+              <div class="stars">★★★★★</div>
+              <p>Comprato la sera prima per Gardaland il giorno dopo, biglietto arrivato in 2 minuti. Fila zero all'ingresso.</p>
+              <div class="who">— Federica, Milano</div>
+            </div>
+            <div class="review-card">
+              <div class="stars">★★★★★</div>
+              <p>Ho preso il jet ski sul Garda tramite loro dopo aver visto la ad su Instagram, prezzo più basso di quello in loco.</p>
+              <div class="who">— Marco, Brescia</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ============ PRODUCT PAGE ============ -->
+<main id="view-product" class="hidden">
+  <div class="container">
+    <div class="breadcrumb"><a href="#" onclick="go('home');return false;">Home</a> / <a href="#" onclick="go('catalog');return false;">Catalogo</a> / <span id="pBreadName"></span></div>
+    <div class="product-layout">
+      <div>
+        <div class="product-gallery">
+          <div class="main-photo" id="pMainPhoto"></div>
+          <div class="thumb-row" id="pThumbs"></div>
+        </div>
+        <div class="product-info">
+          <h1 id="pTitle"></h1>
+          <div class="loc"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span id="pLoc"></span></div>
+          <p class="desc" id="pDesc"></p>
+
+          <div class="info-tabs">
+            <div class="info-tab active" data-tab="includes">Cosa include</div>
+            <div class="info-tab" data-tab="orari">Orari</div>
+            <div class="info-tab" data-tab="disp">Disponibilità</div>
+          </div>
+          <div id="tab-includes"><ul class="includes-list" id="pIncludes"></ul></div>
+          <div id="tab-orari" class="hidden">
+            <p class="desc" id="pOrari"></p>
+          </div>
+          <div id="tab-disp" class="hidden">
+            <p class="desc">Disponibile quasi tutti i giorni. Nei weekend di alta stagione consigliamo di comprare con 2-3 giorni di anticipo perché l'affluenza è più alta.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="buy-box">
+        <div class="price-big" id="pPrice"></div>
+        <div class="price-note">a persona, IVA inclusa</div>
+
+        <div class="field-group">
+          <label>Data visita</label>
+          <input type="date" id="pDate">
+        </div>
+        <div class="field-group">
+          <label>Biglietti</label>
+          <div class="qty-control">
+            <button onclick="changeQty(-1)">−</button>
+            <span id="pQty">1</span>
+            <button onclick="changeQty(1)">+</button>
+          </div>
+        </div>
+
+        <div class="subtotal-row"><span>Subtotale</span><span id="pSubtotal">€0</span></div>
+        <button class="btn btn-primary btn-full" onclick="addToCart()">Aggiungi al carrello</button>
+        <button class="btn btn-dark btn-full" style="margin-top:10px;" onclick="buyNow()">Compra ora</button>
+        <div class="avail-note"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg> Disponibile per la data scelta</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ============ CART / CHECKOUT ============ -->
+<main id="view-cart" class="hidden">
+  <div class="container">
+    <div class="page-hero" style="text-align:left;padding-top:32px;">
+      <h1 style="text-align:left;">Il tuo carrello</h1>
+    </div>
+    <div class="checkout-layout">
+      <div>
+        <div id="cartLines"></div>
+        <div id="emptyCart" class="hidden" style="padding:40px 0;color:var(--muted);">
+          Il carrello è vuoto. <a href="#" onclick="go('catalog');return false;" style="color:var(--teal-dark);font-weight:700;">Torna al catalogo →</a>
+        </div>
+
+        <div style="margin-top:36px;" id="checkoutFormWrap">
+          <h3 style="font-family:'Manrope';font-weight:800;font-size:18px;">I tuoi dati</h3>
+          <div class="form-grid" style="margin-top:14px;">
+            <div class="field-group"><label>Nome</label><input type="text" placeholder="Mario"></div>
+            <div class="field-group"><label>Cognome</label><input type="text" placeholder="Rossi"></div>
+            <div class="field-group full"><label>Email (riceverai qui i biglietti)</label><input type="email" placeholder="mario.rossi@email.com"></div>
+          </div>
+          <h3 style="font-family:'Manrope';font-weight:800;font-size:18px;margin-top:24px;">Pagamento</h3>
+          <div class="stripe-box" style="margin-top:14px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Modulo di pagamento Stripe — da collegare (Payment Element / Checkout Session lato server)
+          </div>
+        </div>
+      </div>
+
+      <div class="summary-box">
+        <h3 style="font-family:'Manrope';font-weight:800;font-size:16.5px;margin-top:0;">Riepilogo ordine</h3>
+        <div class="summary-row"><span id="sumItems">0 biglietti</span><span id="sumSubtotal">€0</span></div>
+        <div class="summary-row"><span>Commissione di servizio</span><span>€0</span></div>
+        <div class="summary-row total"><span>Totale</span><span id="sumTotal">€0</span></div>
+        <button class="btn btn-primary btn-full" style="margin-top:16px;" onclick="go('confirm')">Vai al pagamento</button>
+        <div class="secure-note"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Pagamento crittografato, gestito da Stripe</div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ============ CONFIRMATION ============ -->
+<main id="view-confirm" class="hidden">
+  <div class="container">
+    <div class="confirm-wrap">
+      <div class="check-circle">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
+      </div>
+      <h1 style="font-size:26px;">Pagamento confermato!</h1>
+      <p style="color:var(--muted);">Ti abbiamo inviato il biglietto via email con il QR code. Lo trovi anche qui sotto e nella tua area "I miei biglietti".</p>
+
+      <div class="confirm-ticket">
+        <div class="top">
+          <div class="park" id="cParkName">GARDALAND</div>
+          <div class="place" style="font-size:12.5px;opacity:.9;margin-top:4px;font-weight:600;" id="cParkLoc">Castelnuovo del Garda (VR)</div>
+        </div>
+        <div class="grid2">
+          <div><div class="field-label">Data</div><div class="field-value" id="cDate">14 Ago 2026</div></div>
+          <div><div class="field-label">Ingressi</div><div class="field-value" id="cQty">2 Adulti</div></div>
+          <div><div class="field-label">Ordine N.</div><div class="field-value mono" id="cOrderId">SL-00000</div></div>
+          <div><div class="field-label">Stato</div><div class="field-value" style="color:var(--teal-dark);">Valido</div></div>
+        </div>
+        <div class="qr-wrap"><div class="qr-fake" style="width:120px;height:120px;"></div></div>
+        <div class="code mono">Mostra questo QR all'ingresso — nessuna stampa richiesta</div>
+      </div>
+
+      <div style="margin-top:28px;display:flex;gap:12px;justify-content:center;">
+        <button class="btn btn-outline" onclick="go('account')">Vai ai miei biglietti</button>
+        <button class="btn btn-primary" onclick="go('catalog')">Continua a esplorare</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ============ ACCOUNT ============ -->
+<main id="view-account" class="hidden">
+  <div class="container">
+    <div class="page-hero" style="text-align:left;">
+      <h1 style="text-align:left;">I miei biglietti</h1>
+      <p style="text-align:left;margin:8px 0 0;">Qui trovi tutti i biglietti acquistati, validi e usati.</p>
+    </div>
+    <div class="account-tabs">
+      <button class="chip active">Tutti</button>
+      <button class="chip">In arrivo</button>
+      <button class="chip">Usati</button>
+    </div>
+    <div id="accountList"></div>
+  </div>
+</main>
+
+<!-- ============ FAQ ============ -->
+<main id="view-faq" class="hidden">
+  <div class="container">
+    <div class="page-hero">
+      <h1>Domande frequenti</h1>
+      <p>Rimborsi, cambio data e assistenza — tutto quello che serve sapere prima e dopo l'acquisto.</p>
+    </div>
+    <div style="max-width:720px;margin:32px auto 0;" id="faqList"></div>
+
+    <div style="text-align:center;margin:48px 0 20px;">
+      <h3 style="font-family:'Manrope';font-weight:800;">Non hai trovato risposta?</h3>
+      <p style="color:var(--muted);margin-bottom:18px;">Il nostro team risponde di solito entro poche ore.</p>
+      <button class="btn btn-primary">Scrivici su Instagram</button>
+    </div>
+  </div>
+</main>
+
+<!-- ============ CHI SIAMO ============ -->
+<main id="view-about" class="hidden">
+  <div class="container">
+    <div class="page-hero">
+      <h1>Chi siamo</h1>
+      <p>Vendiamo biglietti per parchi a tema, acquapark e attività acquatiche in Italia e Spagna, con consegna digitale immediata.</p>
+    </div>
+
+    <div class="two-col-list">
+      <div>
+        <h3 style="font-family:'Manrope';font-weight:800;font-size:17px;">La nostra promessa</h3>
+        <p style="color:var(--muted);font-size:14.5px;line-height:1.7;">Compriamo e verifichiamo ogni biglietto prima di metterlo in vendita. Niente rivendita anonima tra privati: ogni ordine passa dal nostro canale ufficiale, con assistenza vera se qualcosa va storto (meteo, imprevisti, cambio data).</p>
+      </div>
+      <div>
+        <h3 style="font-family:'Manrope';font-weight:800;font-size:17px;">Sicurezza dei pagamenti</h3>
+        <p style="color:var(--muted);font-size:14.5px;line-height:1.7;">I pagamenti sono gestiti da Stripe, uno degli standard più usati al mondo per l'e-commerce. Non conserviamo mai i dati della tua carta sui nostri server.</p>
+      </div>
+    </div>
+
+    <div style="margin-top:44px;">
+      <h3 style="font-family:'Manrope';font-weight:800;font-size:17px;margin-bottom:16px;">Cosa dicono i clienti</h3>
+      <div class="two-col-list">
+        <div class="review-card" style="background:#fff;border:1px solid var(--line);">
+          <div class="stars">★★★★★</div>
+          <p style="color:var(--ink);">Servizio serio, biglietto ricevuto subito e prezzo onesto rispetto al parco.</p>
+          <div class="who" style="color:var(--muted);">— Giulia, Verona</div>
+        </div>
+        <div class="review-card" style="background:#fff;border:1px solid var(--line);">
+          <div class="stars">★★★★★</div>
+          <p style="color:var(--ink);">Ho scritto su Instagram per un cambio data ed è stato risolto in giornata.</p>
+          <div class="who" style="color:var(--muted);">— Davide, Bologna</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+  <div class="container">
+    <div class="foot-grid">
+      <div class="foot-col">
+        <div class="logo" style="margin-bottom:14px;">Skip<span class="dot">•</span>Line</div>
+        <p style="color:var(--muted);font-size:13.5px;line-height:1.6;max-width:260px;">Biglietti per parchi a tema, acquapark e attività acquatiche. Consegna digitale immediata via email.</p>
+      </div>
+      <div class="foot-col">
+        <h5>Catalogo</h5>
+        <a href="#" onclick="go('catalog');return false;">Parchi a tema</a>
+        <a href="#" onclick="go('catalog');return false;">Acquapark</a>
+        <a href="#" onclick="go('catalog');return false;">Sport acquatici</a>
+      </div>
+      <div class="foot-col">
+        <h5>Assistenza</h5>
+        <a href="#" onclick="go('faq');return false;">FAQ</a>
+        <a href="#" onclick="go('faq');return false;">Rimborsi e cambio data</a>
+        <a href="#" onclick="go('account');return false;">I miei biglietti</a>
+      </div>
+      <div class="foot-col">
+        <h5>Azienda</h5>
+        <a href="#" onclick="go('about');return false;">Chi siamo</a>
+        <a href="#">Instagram</a>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 SkipLine. Tutti i diritti riservati.</span>
+      <span>Pagamenti gestiti da Stripe</span>
+    </div>
+  </div>
+</footer>
+
+<div class="sticky-cta">
+  <button class="btn btn-primary btn-full" onclick="go('catalog')">Sfoglia biglietti disponibili</button>
+</div>
+
+<script>
+/* =====================================================
+   CONNESSIONE SUPABASE — dati reali dal tuo database
+===================================================== */
+const SUPABASE_URL = 'https://yobamoedbxoyaagkvnmf.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlvYmFtb2VkYnhveWFhZ2t2bm1mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMzNjY2MDcsImV4cCI6MjA5ODk0MjYwN30.6-WEW6SN5mChbxswrzduQX-GHuhLP6En8BtXmTYagBA';
+const supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let PRODUCTS = [];
+
+async function loadProducts(){
+  const grid = document.getElementById('productGrid');
+  grid.innerHTML = '<p style="color:var(--muted);grid-column:1/-1;">Caricamento biglietti…</p>';
+
+  const { data, error } = await supa
+    .from('products')
+    .select('*')
+    .eq('active', true)
+    .order('created_at', { ascending:true });
+
+  if(error){
+    console.error('Errore caricamento prodotti:', error);
+    grid.innerHTML = '<p style="color:var(--muted);grid-column:1/-1;">Non riesco a caricare i biglietti in questo momento. Riprova tra poco.</p>';
+    return;
+  }
+
+  PRODUCTS = data.map(p => ({
+    id: p.id,
+    name: p.name,
+    city: p.city,
+    cat: p.category,
+    photo: p.photo_url,
+    price: Number(p.price),
+    rating: 4.8,
+    desc: p.description,
+    includes: p.includes || [],
+    orari: p.opening_hours || ''
+  }));
+
+  renderProducts();
+}
+
+let state = {
+  filterCity:'tutte', filterCat:'tutte',
+  currentProduct:null, qty:1,
+  cart: []
+};
+
+function euro(n){ return '€' + n.toFixed(0); }
+
+/* -------- ROUTER -------- */
+function go(view, opts){
+  ['home','product','cart','confirm','account','faq','about'].forEach(v=>{
+    document.getElementById('view-'+v).classList.add('hidden');
+  });
+  if(view==='catalog'){
+    document.getElementById('view-home').classList.remove('hidden');
+    window.scrollTo({top: document.getElementById('catalogo').offsetTop - 90, behavior:'smooth'});
+    return;
+  }
+  document.getElementById('view-'+view).classList.remove('hidden');
+  window.scrollTo({top:0, behavior:'instant' in window ? 'instant':'auto'});
+  if(view==='faq') renderFaq();
+  if(view==='account') renderAccount();
+  if(view==='cart') renderCart();
+  if(view==='confirm') renderConfirm();
+}
+
+/* -------- RENDER CATALOG -------- */
+function renderProducts(){
+  const grid = document.getElementById('productGrid');
+  grid.innerHTML = '';
+  const filtered = PRODUCTS.filter(p=>{
+    const okCity = state.filterCity==='tutte' || p.city===state.filterCity;
+    const okCat = state.filterCat==='tutte' || p.cat===state.filterCat;
+    return okCity && okCat;
+  });
+  if(filtered.length===0){
+    grid.innerHTML = '<p style="color:var(--muted);grid-column:1/-1;">Nessuna esperienza trovata per questo filtro. Prova a cambiare città o categoria.</p>';
+    return;
+  }
+  filtered.forEach(p=>{
+    const el = document.createElement('div');
+    el.className = 'ticket-card';
+    el.onclick = ()=> openProduct(p.id);
+    el.innerHTML = `
+      <div class="photo" style="background-image:url('${p.photo}')">
+        <div class="cat-tag">${p.cat}</div>
+        <div class="fav">♡</div>
+      </div>
+      <div class="body">
+        <div class="city">${p.city}</div>
+        <h3>${p.name}</h3>
+        <div class="meta"><span class="stars">★★★★★</span> ${p.rating}</div>
+      </div>
+      <div class="card-perf card-dash"></div>
+      <div class="price-row">
+        <div class="price-tag"><div class="from">A partire da</div><div class="amt">${euro(p.price)} <small>/persona</small></div></div>
+        <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation(); openProduct('${p.id}')">Vedi</button>
+      </div>
+    `;
+    grid.appendChild(el);
+  });
+}
+
+document.getElementById('cityChips').addEventListener('click', e=>{
+  if(!e.target.classList.contains('chip')) return;
+  document.querySelectorAll('#cityChips .chip').forEach(c=>c.classList.remove('active'));
+  e.target.classList.add('active');
+  state.filterCity = e.target.dataset.city;
+  renderProducts();
+});
+document.getElementById('catGrid').addEventListener('click', e=>{
+  const card = e.target.closest('.cat-card');
+  if(!card) return;
+  state.filterCat = card.dataset.cat;
+  renderProducts();
+  go('catalog');
+});
+
+/* -------- PRODUCT PAGE -------- */
+function openProduct(id){
+  const p = PRODUCTS.find(x=>x.id===id);
+  state.currentProduct = p; state.qty = 1;
+  document.getElementById('pBreadName').textContent = p.name;
+  document.getElementById('pMainPhoto').style.backgroundImage = `url('${p.photo}')`;
+  document.getElementById('pThumbs').innerHTML = `<div class="thumb active" style="background-image:url('${p.photo}')"></div>`;
+  document.getElementById('pTitle').textContent = p.name;
+  document.getElementById('pLoc').textContent = p.city;
+  document.getElementById('pDesc').textContent = p.desc;
+  document.getElementById('pIncludes').innerHTML = p.includes.map(i=>`<li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>${i}</li>`).join('');
+  document.getElementById('pOrari').textContent = p.orari;
+  document.getElementById('pPrice').textContent = euro(p.price);
+  document.getElementById('pQty').textContent = '1';
+  updateSubtotal();
+  const today = new Date(); today.setDate(today.getDate()+1);
+  document.getElementById('pDate').value = today.toISOString().split('T')[0];
+  go('product');
+}
+function changeQty(delta){
+  state.qty = Math.max(1, state.qty + delta);
+  document.getElementById('pQty').textContent = state.qty;
+  updateSubtotal();
+}
+function updateSubtotal(){
+  document.getElementById('pSubtotal').textContent = euro(state.currentProduct.price * state.qty);
+}
+document.querySelectorAll('.info-tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    document.querySelectorAll('.info-tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    ['includes','orari','disp'].forEach(t=>document.getElementById('tab-'+t).classList.add('hidden'));
+    document.getElementById('tab-'+tab.dataset.tab).classList.remove('hidden');
+  });
+});
+
+function addToCart(){
+  const p = state.currentProduct;
+  state.cart.push({ id:p.id, name:p.name, city:p.city, photo:p.photo, price:p.price, qty:state.qty, date: document.getElementById('pDate').value });
+  updateCartCount();
+  go('cart');
+}
+function buyNow(){
+  addToCart();
+}
+function updateCartCount(){
+  const count = state.cart.reduce((s,i)=>s+i.qty,0);
+  document.getElementById('cartCount').textContent = count;
+}
+
+/* -------- CART / CHECKOUT -------- */
+function renderCart(){
+  const wrap = document.getElementById('cartLines');
+  const empty = document.getElementById('emptyCart');
+  const formWrap = document.getElementById('checkoutFormWrap');
+  wrap.innerHTML = '';
+  if(state.cart.length===0){
+    empty.classList.remove('hidden');
+    formWrap.classList.add('hidden');
+  } else {
+    empty.classList.add('hidden');
+    formWrap.classList.remove('hidden');
+    state.cart.forEach(line=>{
+      const el = document.createElement('div');
+      el.className='cart-line';
+      el.innerHTML = `
+        <img src="${line.photo}">
+        <div class="info">
+          <h4>${line.name}</h4>
+          <div class="sub">${line.city} · ${line.qty} biglietti · ${line.date}</div>
+        </div>
+        <div class="price mono">${euro(line.price*line.qty)}</div>
+      `;
+      wrap.appendChild(el);
+    });
+  }
+  const subtotal = state.cart.reduce((s,i)=>s+i.price*i.qty,0);
+  const itemCount = state.cart.reduce((s,i)=>s+i.qty,0);
+  document.getElementById('sumItems').textContent = itemCount + ' biglietti';
+  document.getElementById('sumSubtotal').textContent = euro(subtotal);
+  document.getElementById('sumTotal').textContent = euro(subtotal);
+}
+
+/* -------- CONFIRMATION -------- */
+function renderConfirm(){
+  if(state.cart.length===0) return;
+  const first = state.cart[0];
+  document.getElementById('cParkName').textContent = first.name.split(' — ')[0].toUpperCase();
+  document.getElementById('cParkLoc').textContent = first.city;
+  document.getElementById('cDate').textContent = first.date;
+  const totalQty = state.cart.reduce((s,i)=>s+i.qty,0);
+  document.getElementById('cQty').textContent = totalQty + ' Ingressi';
+  document.getElementById('cOrderId').textContent = 'SL-' + Math.floor(10000+Math.random()*89999);
+
+  // salva come "acquistati" per l'area account
+  state.cart.forEach(line=>{
+    purchasedTickets.push({...line, orderId: document.getElementById('cOrderId').textContent, status:'valid'});
+  });
+  state.cart = [];
+  updateCartCount();
+}
+
+/* -------- ACCOUNT -------- */
+let purchasedTickets = [
+  { name:'Gardaland — Biglietto Giornaliero', city:'Lago di Garda', photo:'https://images.unsplash.com/photo-1595535873420-a599195b3f4a?q=80&w=1200&auto=format&fit=crop', date:'22 Lug 2026', orderId:'SL-48213', status:'valid', qty:2 },
+  { name:'Siam Park — Ingresso Acquapark', city:'Tenerife', photo:'https://images.unsplash.com/photo-1544551763-77ef2d0cfc6c?q=80&w=1200&auto=format&fit=crop', date:'03 Giu 2026', orderId:'SL-30981', status:'used', qty:1 }
+];
+function renderAccount(){
+  const wrap = document.getElementById('accountList');
+  wrap.innerHTML = '';
+  purchasedTickets.forEach(t=>{
+    const el = document.createElement('div');
+    el.className='acc-ticket';
+    el.innerHTML = `
+      <img src="${t.photo}">
+      <div class="info">
+        <h4>${t.name}</h4>
+        <div class="sub">${t.city} · ${t.qty} biglietti · ${t.date} · <span class="mono">${t.orderId}</span></div>
+      </div>
+      <span class="status-pill ${t.status}">${t.status==='valid' ? 'Valido' : 'Usato'}</span>
+    `;
+    wrap.appendChild(el);
+  });
+}
+
+/* -------- FAQ -------- */
+const FAQS = [
+  {q:'Come ricevo il mio biglietto dopo l\'acquisto?', a:'Subito dopo il pagamento ricevi un\'email con il biglietto in PDF e il QR code da mostrare all\'ingresso. Lo trovi anche nella sezione "I miei biglietti".'},
+  {q:'Posso cambiare la data della visita?', a:'Sì, nella maggior parte dei casi puoi richiedere il cambio data scrivendoci almeno 48 ore prima, in base alla disponibilità del parco.'},
+  {q:'Cosa succede se il parco chiude per maltempo?', a:'Se il parco è chiuso per cause di forza maggiore, il biglietto viene rimborsato o riprogrammato senza costi aggiuntivi.'},
+  {q:'Il prezzo include tutte le attrazioni?', a:'Sì, il prezzo indicato è quello di ingresso giornaliero con accesso a tutte le attrazioni standard del parco, salvo dove diversamente specificato nella scheda prodotto.'},
+  {q:'Come vi contatto per assistenza?', a:'Puoi scriverci direttamente sul nostro canale Instagram o dalla pagina FAQ: rispondiamo di solito entro poche ore.'}
+];
+function renderFaq(){
+  const wrap = document.getElementById('faqList');
+  wrap.innerHTML = '';
+  FAQS.forEach((f,i)=>{
+    const el = document.createElement('div');
+    el.className='faq-item';
+    el.innerHTML = `
+      <div class="faq-q">${f.q} <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></div>
+      <div class="faq-a"><div class="faq-a-inner">${f.a}</div></div>
+    `;
+    el.querySelector('.faq-q').addEventListener('click', ()=> el.classList.toggle('open'));
+    wrap.appendChild(el);
+  });
+}
+
+/* -------- INIT -------- */
+loadProducts();
+</script>
+</body>
+</html>
