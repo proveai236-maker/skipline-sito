@@ -792,15 +792,24 @@ async function loadProducts(){
   const grid = document.getElementById('productGrid');
   grid.innerHTML = '<p style="color:var(--muted);grid-column:1/-1;">Caricamento biglietti…</p>';
 
-  const { data, error } = await supa
-    .from('products')
-    .select('*')
-    .eq('active', true)
-    .order('created_at', { ascending:true });
+  let data, error;
+  try{
+    const res = await supa
+      .from('products')
+      .select('*')
+      .eq('active', true)
+      .order('created_at', { ascending:true });
+    data = res.data; error = res.error;
+  } catch(e){
+    error = { message: e.message || String(e) };
+  }
 
   if(error){
     console.error('Errore caricamento prodotti:', error);
-    grid.innerHTML = '<p style="color:var(--muted);grid-column:1/-1;">Non riesco a caricare i biglietti in questo momento. Riprova tra poco.</p>';
+    grid.innerHTML = `<div style="grid-column:1/-1;background:#FFF3F0;border:1px solid #FFB6A3;border-radius:12px;padding:16px;color:#8A2E1A;font-size:13.5px;font-family:monospace;">
+      <b>Errore caricamento prodotti</b><br>
+      ${error.message || 'errore sconosciuto'}${error.details ? '<br>Dettagli: '+error.details : ''}${error.hint ? '<br>Suggerimento: '+error.hint : ''}
+    </div>`;
     return;
   }
 
