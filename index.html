@@ -481,11 +481,11 @@
         <h2>...o per tipo di esperienza</h2>
       </div>
       <div class="cat-grid" id="catGrid">
-        <div class="cat-card" data-cat="tutte"><div class="emoji">🎟️</div><div class="name">Tutte</div><div class="count">18 esperienze</div></div>
-        <div class="cat-card" data-cat="Parchi a tema"><div class="emoji">🎢</div><div class="name">Parchi a tema</div><div class="count">6 esperienze</div></div>
-        <div class="cat-card" data-cat="Acquapark"><div class="emoji">🌊</div><div class="name">Acquapark</div><div class="count">5 esperienze</div></div>
-        <div class="cat-card" data-cat="Sport acquatici"><div class="emoji">🚤</div><div class="name">Sport acquatici</div><div class="count">4 esperienze</div></div>
-        <div class="cat-card" data-cat="Altro"><div class="emoji">✨</div><div class="name">Altro</div><div class="count">3 esperienze</div></div>
+        <div class="cat-card" data-cat="tutte"><div class="emoji">🎟️</div><div class="name">Tutte</div><div class="count" data-count-for="tutte">—</div></div>
+        <div class="cat-card" data-cat="Parchi a tema"><div class="emoji">🎢</div><div class="name">Parchi a tema</div><div class="count" data-count-for="Parchi a tema">—</div></div>
+        <div class="cat-card" data-cat="Acquapark"><div class="emoji">🌊</div><div class="name">Acquapark</div><div class="count" data-count-for="Acquapark">—</div></div>
+        <div class="cat-card" data-cat="Sport acquatici"><div class="emoji">🚤</div><div class="name">Sport acquatici</div><div class="count" data-count-for="Sport acquatici">—</div></div>
+        <div class="cat-card" data-cat="Altro"><div class="emoji">✨</div><div class="name">Altro</div><div class="count" data-count-for="Altro">—</div></div>
       </div>
 
       <div class="grid" id="productGrid"></div>
@@ -818,6 +818,28 @@ async function loadProducts(){
   }));
 
   renderProducts();
+  updateCategoryCounts();
+  updateHeroTicket();
+}
+
+function updateCategoryCounts(){
+  const counts = { 'tutte': PRODUCTS.length };
+  PRODUCTS.forEach(p=>{
+    counts[p.cat] = (counts[p.cat] || 0) + 1;
+  });
+  document.querySelectorAll('[data-count-for]').forEach(el=>{
+    const key = el.getAttribute('data-count-for');
+    const n = counts[key] || 0;
+    el.textContent = n + (n===1 ? ' esperienza' : ' esperienze');
+  });
+}
+
+function updateHeroTicket(){
+  if(PRODUCTS.length===0) return;
+  const p = PRODUCTS[0];
+  const parkName = p.name.split(' — ')[0];
+  document.querySelector('.ticket-hero .top .park').textContent = parkName.toUpperCase();
+  document.querySelector('.ticket-hero .top .place').textContent = p.city;
 }
 
 let state = {
